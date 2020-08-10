@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-#define udp_kBufferSize 512
+#define udp_kBufferSize 256
 
 int udp_open(int udp_port);
 int udp_read(char *datagram);

@@ -1,6 +1,6 @@
 CC         = gcc
-PROGRAM    = buslogger
-CSRC       = buslogger.c udp.c
+PROGRAM    = logger
+CSRC       = logger.c udp.c mkdir.c
 BUILDDIR   = bin
 SOURCEDIR  = src
 EXTDIR     = ext

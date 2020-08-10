@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include "mkdir.h"
 #include "udp.h"
 
 #define STRINGIZE_DETAIL(x) #x
@@ -14,7 +16,7 @@
 #define LINE STRINGIZE(__LINE__)
 
 // log record structure
-#define LOG_MAX_STRING_LEN (udp_kBufferSize)
+#define LOG_MAX_STRING_LEN (256)
 
 // listening port
 #define kUDPPort (12345)
@@ -81,6 +83,10 @@ void putLog(char *logString) {
             1900L + tm.tm_year, tm.tm_mday, tm.tm_hour, tm.tm_min);
   }
 
+  // struct timeval tv;
+  // gettimeofday(&tv, NULL);
+  // suseconds_t ms = tv.tv_usec / 1000L;
+  // struct tm tm = *gmtime(&tv.tv_sec);
   strcpy(&fileBuffer[fileBufferIndex], logEntry);
   fileBufferIndex += strlen(logEntry);
 
@@ -88,6 +94,56 @@ void putLog(char *logString) {
 }
 
 int main(int argc, char *argv[]) {
+
+  signal(SIGINT, intHandler);
+
+  char *loggerDirectory = "";
+
+  int opt;
+
+  opterr = 0;
+
+  while ((opt = getopt(argc, argv, "d:")) != -1)
+    switch (opt) {
+
+    case 'd':
+      loggerDirectory = optarg;
+      break;
+    case '?':
+      if (optopt == 'd')
+        fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+      else if (isprint(optopt))
+        fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+      else
+        fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+      return 1;
+    default:
+      abort();
+    }
+
+  printf("directory = %s\n", loggerDirectory);
+
+  for (int index = optind; index < argc; index++)
+    printf("Non-option argument %s\n", argv[index]);
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  suseconds_t ms = tv.tv_usec / 1000L;
+  struct tm tm = *gmtime(&tv.tv_sec);
+
+  // printf("%s%4.4ld/%2.2ld/%2.2ld/%2.2ld/%2.2ld\n", loggerDirectory,
+  //        1900L + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday, tm.tm_hour,
+  //        tm.tm_min);
+
+  char path[256];
+  sprintf(path, "%s%4.4ld/%2.2ld/%2.2ld/%2.2ld", loggerDirectory,
+          1900L + tm.tm_year, 1 + tm.tm_mon, tm.tm_mday, tm.tm_hour);
+
+  printf("%s\n", path);
+  build(path);
+
+  return 0;
+
   char rxString[udp_kBufferSize] = {0};
 
   if (argc != 2) {
@@ -101,7 +157,7 @@ int main(int argc, char *argv[]) {
 
   strncpy(filePath, argv[1], LOG_MAX_STRING_LEN);
 
-  signal(SIGINT, intHandler);
+  return 0;
 
   fileBuffer = (char *)malloc(kMaxLogFileSize);
   if (fileBuffer == NULL) {
