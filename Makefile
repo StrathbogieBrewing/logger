@@ -1,6 +1,6 @@
 CC         = gcc
 PROGRAM    = logger
-CSRC       = logger.c udp.c mkdir.c
+CSRC       = logger.c log.c udp.c mkdir.c
 BUILDDIR   = bin
 SOURCEDIR  = src
 EXTDIR     = ext
